@@ -2,6 +2,7 @@ import os
 import numpy as np
 import torch
 import torch.nn.functional as F
+from langchain.tools import tool
 from torchvision import transforms
 from models.aesthetic_resnet import AestheticResNet50
 from PIL import Image
@@ -29,7 +30,7 @@ eval_transform = transforms.Compose([
 
 def load_model():
     model = AestheticResNet50(pretrained=False)
-    ckpt = torch.load(MODEL_PATH, map_location=DEVICE)
+    ckpt = torch.load(MODEL_PATH, map_location=DEVICE, weights_only=True)
     if "model_state" in ckpt:
         model.load_state_dict(ckpt["model_state"])
     else:
@@ -40,7 +41,11 @@ def load_model():
 
 MODEL = load_model()
 
-def score_aesthetic_tool(pil_img: Image.Image):
+@tool
+def score_aesthetic(file_path):
+    """Score the aesthetic quality of an image with a distribution over scores 1-10 and a mean score."""
+    
+    pil_img = Image.open(file_path).convert("RGB")
     x = eval_transform(pil_img).unsqueeze(0).to(DEVICE)
     with torch.no_grad():
         logits = MODEL(x)
