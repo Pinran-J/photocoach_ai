@@ -1,4 +1,4 @@
-from .agent_state import AgentState
+from agent.agent_state import AgentState
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from langgraph.graph import StateGraph, START, END
 from tools.models_utils import score_aesthetic
@@ -9,7 +9,8 @@ from rag.retriever_fetch_tool import retrieve_photography_tips
 def planner_node(state: AgentState, tool_deciding_llm):
     """A simple planner node that decides which tools to call based on the user query."""
     prompt = f"""
-    You are a photography coach. Based on the user's query and the conversation history, decide which tools are required to assist the user.
+    You are a photography coach designed to help users improve their photos. 
+    Based on the user's query and the conversation history, decide which tools are required to assist the user, usually the EXIF data and captioning tools are very helpful.
     
     Conversation history:
     {state['messages']}
@@ -18,20 +19,22 @@ def planner_node(state: AgentState, tool_deciding_llm):
     {state['user_query']}
 
     Available tools:
-    - caption_image
-    - aesthetic_score
-    - extract_exif
-    - retrieve_photography_tips
+    - caption_image (describes the content of the image)
+    - aesthetic_score (provides an aesthetic quality score for the image)
+    - extract_exif (extracts EXIF metadata from the image)
+    - retrieve_photography_tips (provides photography tips based on the user's query)
 
-    Decide which tools to call. Return a JSON object with boolean values for each tool, indicating whether to call it or not.
+    Decide which tools to call. Return a JSON object with boolean values for each tool, indicating whether to call it or not. Usually it is better to call more tools to gather more information about the image.
     """
     sys_msg = SystemMessage(content=prompt)
     human_msg = HumanMessage(content=state["user_query"])
-    
-    response = tool_deciding_llm.invoke([sys_msg] + [human_msg])
-    return {"tool_calls": response["structured_response"]} # The old state is compounded on top.
 
-def route_after_planner(state):
+    response = tool_deciding_llm.invoke({"messages": [sys_msg] + [human_msg]})
+    # print("PLANNER RESPONSE:", response["structured_response"])
+    return {"tool_plan": response["structured_response"]} # The old state is compounded on top.
+
+def route_after_planner(state: AgentState):
+    print(state)
     if not any(state["tool_plan"].values()):
         return END
     return "tool_executor"
@@ -43,16 +46,16 @@ def tool_node(state: AgentState):
     updates = {}
 
     if plan["caption_image"]:
-        updates["caption"] = caption_image(state["image_path"])
+        updates["caption"] = caption_image.invoke({"image_path": state["image_path"]})
 
     if plan["aesthetic_score"]:
-        updates["aesthetic_dist"], updates["aesthetic_score"] = score_aesthetic(state["image_path"])
+        updates["aesthetic_dist"], updates["aesthetic_score"] = score_aesthetic.invoke({"image_path": state["image_path"]})
 
     if plan["extract_exif"]:
-        updates["exif"] = fetch_exif(state["image_path"])
+        updates["exif"] = fetch_exif.invoke({"image_path": state["image_path"]})
 
     if plan["retrieve_photography_tips"]:
-        updates["retrieved_docs"] = retrieve_photography_tips(state["user_query"])
+        updates["retrieved_docs"] = retrieve_photography_tips.invoke({"query": state["user_query"]})
 
     return updates
 
@@ -78,7 +81,7 @@ def final_answer_node(state: AgentState, llm):
     Photography knowledge:
     {state.get("retrieved_docs")}
 
-    Give clear, practical advice.
+    Give clear, practical and specific advice based on the following information fetched about the image's aesthetic quality, EXIF data, and caption.
     """
 
     response = llm.invoke(prompt)

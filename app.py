@@ -9,6 +9,7 @@ from langgraph.graph import MessagesState
 from langchain.chat_models import init_chat_model
 from langchain.agents import create_agent
 from agent.graph import build_graph
+from langchain_core.messages import HumanMessage
 
 load_dotenv()
 
@@ -34,15 +35,12 @@ tool_decider_model = create_agent(
 
 graph = build_graph(tool_decider_model, response_model)
 
-def generate_query_or_respond(state: MessagesState):
-    """Call the model to generate a response based on the current state. Given
-    the question, it will decide to retrieve using the retriever tool, or simply respond to the user.
-    """
-    response = (
-        response_model
-        .bind_tools(tools).invoke(state["messages"])  
-    )
-    return {"messages": [response]}
+initial_state = {
+    "user_query": "What are the different ways i can improve this picture?",
+    "image_path": "data/DSCF0677.JPG",
+    "messages": [HumanMessage(content="What are the different ways i can improve this picture?")],
+}
 
-input = {"messages": [{"role": "user", "content": "hello!"}]}
-generate_query_or_respond(input)["messages"][-1].pretty_print()
+result = graph.invoke(initial_state)
+
+print(result["messages"][-1].content)

@@ -7,7 +7,6 @@ from torchvision import transforms
 from models.aesthetic_resnet import AestheticResNet50
 from PIL import Image
 
-
 MODEL_URL = "https://huggingface.co/icecram/aesthetic_ranker/resolve/main/best_aesthetic_model_gpt_torch.pth"
 MODEL_PATH = "./models/best_aesthetic_model_gpt_torch.pth"
 IMAGE_SIZE = 224
@@ -42,10 +41,10 @@ def load_model():
 MODEL = load_model()
 
 @tool
-def score_aesthetic(file_path):
+def score_aesthetic(image_path: str) -> tuple[list, float]:
     """Score the aesthetic quality of an image with a distribution over scores 1-10 and a mean score."""
     
-    pil_img = Image.open(file_path).convert("RGB")
+    pil_img = Image.open(image_path).convert("RGB")
     x = eval_transform(pil_img).unsqueeze(0).to(DEVICE)
     with torch.no_grad():
         logits = MODEL(x)

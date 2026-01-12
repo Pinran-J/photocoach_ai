@@ -16,7 +16,7 @@ vector_store = PineconeVectorStore(index=index, embedding=embeddings)
 retriever = vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 2})
 
 @tool
-def retrieve_photography_tips(query: str) -> str:
+def retrieve_photography_tips(query: str) -> list[str]:
     """Search and return information about photography tips from the books ingested."""
     docs = retriever.invoke(query)
     # return "\n\n".join([doc.page_content for doc in docs])
