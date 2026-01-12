@@ -19,4 +19,5 @@ retriever = vector_store.as_retriever(search_type="similarity", search_kwargs={"
 def retrieve_photography_tips(query: str) -> str:
     """Search and return information about photography tips from the books ingested."""
     docs = retriever.invoke(query)
-    return "\n\n".join([doc.page_content for doc in docs])
+    # return "\n\n".join([doc.page_content for doc in docs])
+    return [doc.page_content for doc in docs]
