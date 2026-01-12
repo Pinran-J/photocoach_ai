@@ -36,9 +36,9 @@ tool_decider_model = create_agent(
 graph = build_graph(tool_decider_model, response_model)
 
 initial_state = {
-    "user_query": "What are the different ways i can improve this picture?",
+    "user_query": "Hey how are you?",
     "image_path": "data/DSCF0677.JPG",
-    "messages": [HumanMessage(content="What are the different ways i can improve this picture?")],
+    "messages": [HumanMessage(content="Hey how are you?")],
 }
 
 result = graph.invoke(initial_state)

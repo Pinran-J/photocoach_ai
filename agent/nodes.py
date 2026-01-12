@@ -36,7 +36,7 @@ def planner_node(state: AgentState, tool_deciding_llm):
 def route_after_planner(state: AgentState):
     print(state)
     if not any(state["tool_plan"].values()):
-        return END
+        return "final"
     return "tool_executor"
 
 
@@ -82,8 +82,9 @@ def final_answer_node(state: AgentState, llm):
     {state.get("retrieved_docs")}
 
     Give clear, practical and specific advice based on the following information fetched about the image's aesthetic quality, EXIF data, and caption.
+    Answer normally if no tools were called and non-image related question was asked.
     """
-
+    print(prompt)
     response = llm.invoke(prompt)
     return {
         "messages": state["messages"] + [AIMessage(content=response.content)]

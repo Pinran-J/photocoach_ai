@@ -15,7 +15,7 @@ def build_graph(planner_llm, final_llm):
     graph.add_conditional_edges(
         "planner",
         route_after_planner,
-        ["tool_executor", END]
+        ["tool_executor", "final"]
     )
 
     graph.add_edge("tool_executor", "final")
