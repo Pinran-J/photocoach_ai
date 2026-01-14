@@ -18,13 +18,16 @@ def planner_node(state: AgentState, tool_deciding_llm):
     User query:
     {state['user_query']}
 
+    Image present:
+    {'Yes' if state['image_path'] else 'No'}
+    
     Available tools:
-    - caption_image (describes the content of the image)
-    - aesthetic_score (provides an aesthetic quality score for the image)
-    - extract_exif (extracts EXIF metadata from the image)
-    - retrieve_photography_tips (provides photography tips based on the user's query)
+    - caption_image (describes the content of the image, call this if the user does not describe the image, REQUIRES an image)
+    - aesthetic_score (provides an aesthetic quality score for the image, call this if the user asks about image quality, REQUIRES an image)
+    - extract_exif (extracts EXIF metadata from the image, call this if the user asks about camera settings, REQUIRES an image)
+    - retrieve_photography_tips (provides photography tips based on the user's query, call this for general photography questions)
 
-    Decide which tools to call. Return a JSON object with boolean values for each tool, indicating whether to call it or not. Usually it is better to call more tools to gather more information about the image.
+    Return a JSON object with boolean values for each tool, indicating whether to call it or not. Usually it is better to call more tools to gather more information about the image.
     """
     sys_msg = SystemMessage(content=prompt)
     human_msg = HumanMessage(content=state["user_query"])

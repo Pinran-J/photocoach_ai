@@ -1,6 +1,7 @@
 # Custom
 models/best_aesthetic_model_gpt_torch.pth
 data
+.gradio
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
