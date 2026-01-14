@@ -33,7 +33,8 @@ def planner_node(state: AgentState, tool_deciding_llm):
     human_msg = HumanMessage(content=state["user_query"])
 
     response = tool_deciding_llm.invoke({"messages": [sys_msg] + [human_msg]})
-    # print("PLANNER RESPONSE:", response["structured_response"])
+    print("PLANNER RESPONSE:", response["structured_response"])
+    print("STATE:", response)
     return {"tool_plan": response["structured_response"]} # The old state is compounded on top.
 
 def route_after_planner(state: AgentState):
