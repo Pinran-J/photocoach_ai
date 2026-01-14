@@ -47,14 +47,16 @@ def tool_node(state: AgentState):
     """Perform tool calls based on the planner's decision."""
     plan = state["tool_plan"]
     updates = {}
+    print("TOOL PLAN:", plan)
+    print(f"state {state}")
 
-    if plan["caption_image"]:
+    if plan["caption_image"] and state["image_path"]:
         updates["caption"] = caption_image.invoke({"image_path": state["image_path"]})
 
-    if plan["aesthetic_score"]:
+    if plan["aesthetic_score"] and state["image_path"]:
         updates["aesthetic_dist"], updates["aesthetic_score"] = score_aesthetic.invoke({"image_path": state["image_path"]})
 
-    if plan["extract_exif"]:
+    if plan["extract_exif"] and state["image_path"]:
         updates["exif"] = fetch_exif.invoke({"image_path": state["image_path"]})
 
     if plan["retrieve_photography_tips"]:
@@ -71,6 +73,9 @@ def final_answer_node(state: AgentState, llm):
 
     Image caption:
     {state.get("caption")}
+    
+    Image present:
+    {'Yes' if state['image_path'] else 'No'}
 
     Aesthetic score:
     {state.get("aesthetic_score")}

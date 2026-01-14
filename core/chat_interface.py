@@ -37,6 +37,16 @@ class chat_interface:
             "messages": history,
         }
         print(initial_state)
-        result = self.graph.invoke(initial_state)
-
+        result = self.graph.invoke(initial_state) 
         return result["messages"][-1].content
+                
+        # any_yielded = False
+        # for chunk in self.graph.stream(initial_state, stream_mode="values"):
+        #     if "messages" in chunk and chunk["messages"]:
+        #         any_yielded = True
+        #         yield chunk["messages"][-1].content
+
+        # # If nothing was yielded, yield a fallback
+        # if not any_yielded:
+        #     yield "Sorry, could not process your input."
+
