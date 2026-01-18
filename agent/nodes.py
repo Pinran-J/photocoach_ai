@@ -11,6 +11,7 @@ def planner_node(state: AgentState, tool_deciding_llm):
     prompt = f"""
     You are a photography coach designed to help users improve their photos. 
     Based on the user's query and the conversation history, decide which tools are required to assist the user, usually the EXIF data and captioning tools are very helpful.
+    Do not need to call any tools if the user query is unrelated to photography or image critique. (Such as a simple greeting.)
     
     Conversation history:
     {state['messages']}
@@ -27,14 +28,14 @@ def planner_node(state: AgentState, tool_deciding_llm):
     - extract_exif (extracts EXIF metadata from the image, call this if the user asks about camera settings, REQUIRES an image)
     - retrieve_photography_tips (provides photography tips based on the user's query, call this for general photography questions)
 
-    Return a JSON object with boolean values for each tool, indicating whether to call it or not. Usually it is better to call more tools to gather more information about the image.
+    Return a JSON object with boolean values for each tool ONLY, indicating whether to call it or not. Usually it is better to call more tools to gather more information about the image.
     """
     sys_msg = SystemMessage(content=prompt)
     human_msg = HumanMessage(content=state["user_query"])
 
     response = tool_deciding_llm.invoke({"messages": [sys_msg] + [human_msg]})
-    print("PLANNER RESPONSE:", response["structured_response"])
     print("STATE:", response)
+    print("PLANNER RESPONSE:", response["structured_response"])
     return {"tool_plan": response["structured_response"]} # The old state is compounded on top.
 
 def route_after_planner(state: AgentState):

@@ -41,7 +41,7 @@ def create_gradio_app():
                     label="PhotoCoach AI"
                 )
                 gr.ChatInterface(
-                    fn=chat.rag_chat,
+                    fn=chat.async_rag_chat,
                     additional_inputs=[image_state],
                     chatbot=chatbot,
                 )
