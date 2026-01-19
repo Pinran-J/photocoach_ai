@@ -76,7 +76,16 @@ class chat_interface:
                     final_state = chunk
                     if "tool_plan" in final_state:
                         if any(final_state["tool_plan"].values()) and not emitted_tool_plan:
-                            results.append(gr.ChatMessage(role="assistant", content=f"Plan: {final_state['tool_plan']}", metadata={"title": f"🛠️ Used tools"}))
+                            to_caption_image = "✓" if final_state["tool_plan"]["caption_image"] else "✗"
+                            to_aesthetic_score = "✓" if final_state["tool_plan"]["aesthetic_score"] else "✗"
+                            to_extract_exif = "✓" if final_state["tool_plan"]["extract_exif"] else "✗"
+                            to_retrieve_photography_tips = "✓" if final_state["tool_plan"]["retrieve_photography_tips"] else "✗"
+
+                            display_msg = f"Plan: Caption image {to_caption_image}, " \
+                                          f"Aesthetic scoring {to_aesthetic_score}, " \
+                                          f"EXIF extraction {to_extract_exif}, " \
+                                          f"Retrieve photography tips {to_retrieve_photography_tips}."
+                            results.append(gr.ChatMessage(role="assistant", content=display_msg, metadata={"title": f"🛠️ Used tools"}))
                             emitted_tool_plan = True
                             yield results
                             
