@@ -18,7 +18,7 @@ The system demonstrates **agentic planning, state-driven execution, and real-tim
       </ul>
     </li>
     <li><a href="#🧠-system-architecture">System Architecture</a></li>
-    <li><a href="#🧠-system-architecture">System Architecture</a></li>
+    <li><a href="#📁-project-structure">Project Structure</a></li>
     <li><a href="#📸-demo">Demo</a></li>
     <li><a href="#📦-future-work">Future Work</a></li>
     <li><a href="#🧑‍💻-author">Author</a></li>
