@@ -13,15 +13,15 @@ The system demonstrates **agentic planning, state-driven execution, and real-tim
     <li>
       <a href="#about-the-project">About The Project</a>
       <ul>
-        <li><a href="#🚀-features">Features</a></li>
+        <li><a href="#-features">Features</a></li>
         <li><a href="#built-with">Built With</a></li>
       </ul>
     </li>
-    <li><a href="#🧠-system-architecture">System Architecture</a></li>
-    <li><a href="#📁-project-structure">Project Structure</a></li>
-    <li><a href="#📸-demo">Demo</a></li>
-    <li><a href="#📦-future-work">Future Work</a></li>
-    <li><a href="#🧑‍💻-author">Author</a></li>
+    <li><a href="#-system-architecture">System Architecture</a></li>
+    <li><a href="#-project-structure">Project Structure</a></li>
+    <li><a href="#-demo">Demo</a></li>
+    <li><a href="#-future-work">Future Work</a></li>
+    <li><a href="#%E2%80%8D-author">Author</a></li>
   </ol>
 </details>
 
