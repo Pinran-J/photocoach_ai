@@ -5,7 +5,6 @@ from tools.captioning_tool import caption_image
 from rag.retriever_fetch_tool import retrieve_photography_tips
 from agent.agent_state import ToolCalls
 from langchain.chat_models import init_chat_model
-from langchain.agents import create_agent
 from agent.graph import build_graph
 
 import gradio as gr
@@ -21,12 +20,13 @@ class chat_interface:
             caption_image,
         ]
 
-        response_model = init_chat_model("gpt-5-nano", temperature=0)
+        # temperature=0 + with_structured_output uses the model's native function-calling
+        # schema, so partial/trailing text from the model never reaches the JSON parser.
+        planner_base = init_chat_model("gpt-5-nano", temperature=0)
+        tool_decider_model = planner_base.with_structured_output(ToolCalls)
 
-        tool_decider_model = create_agent(
-            model="gpt-5-nano",
-            response_format=ToolCalls,
-        )
+        # temperature=0.3 for natural, varied coaching language
+        response_model = init_chat_model("gpt-5-nano", temperature=0.3)
 
         self.graph = build_graph(tool_decider_model, response_model)
         self.image = None
