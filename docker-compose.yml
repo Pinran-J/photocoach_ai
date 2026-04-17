@@ -1,0 +1,62 @@
+# ── PhotoCoach AI — Local Development Stack ───────────────────────────────────
+#
+# Services:
+#   photocoach-app   Gradio web UI + LangGraph agent  → http://localhost:7860
+#   photocoach-mcp   MCP tool server (HTTP transport) → http://localhost:8000/mcp
+#
+# Usage:
+#   docker compose up --build          # start both services
+#   docker compose up photocoach-app   # start only the Gradio app
+#   docker compose down                # stop and remove containers
+#
+# API keys are read from your local .env file — never committed to git.
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  photocoach-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: photocoach-app:local
+    container_name: photocoach-app
+    ports:
+      - "7860:7860"
+    env_file:
+      - .env
+    volumes:
+      # Persist downloaded model weights across container restarts
+      - model-cache:/app/models
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s   # give time for BLIP + ResNet50 to download on first run
+
+  photocoach-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
+    image: photocoach-mcp:local
+    container_name: photocoach-mcp
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      # Share the same model cache — avoids downloading weights twice
+      - model-cache:/app/models
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/mcp"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  # Named volume so model weights survive `docker compose down`
+  # (they are re-downloaded from HuggingFace if the volume is deleted)
+  model-cache:

@@ -1,13 +1,13 @@
-from dotenv import load_dotenv, dotenv_values
+import os
+from dotenv import load_dotenv
 from pinecone import Pinecone, ServerlessSpec
 from langchain_openai import OpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
-from langchain.tools import tool
+from langchain_core.tools import tool
 
-load_dotenv()
-config = dotenv_values(".env")
+load_dotenv()  # reads .env locally; no-op in Docker/K8s (env vars injected by runtime)
 
-pc = Pinecone(api_key=config["PINECONE_API_KEY"])
+pc = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
 
 index_name = "photocoach-ai-index"
 index = pc.Index(index_name)

@@ -37,7 +37,6 @@ def planner_node(state: AgentState, tool_deciding_llm):
 
     # with_structured_output returns the TypedDict directly (not {"structured_response": ...})
     response = tool_deciding_llm.invoke([sys_msg, human_msg])
-    print("PLANNER RESPONSE:", response)
     return {"tool_plan": response}
 
 
@@ -50,7 +49,6 @@ def route_after_planner(state: AgentState):
 async def tool_node(state: AgentState):
     """Execute all selected tools in parallel using asyncio.gather."""
     plan = state["tool_plan"]
-    print("TOOL PLAN:", plan)
 
     # Build coroutine dict — only schedule tools the planner selected
     coros = {}
@@ -127,7 +125,6 @@ Instructions:
 - If no image was provided and no tools were called, respond naturally to the user's question.
 - Be concise. Avoid generic advice — be specific to what you can observe from the data above.
 """
-    print(prompt)
     response = llm.invoke(prompt)
     return {
         "messages": state["messages"] + [AIMessage(content=response.content)]

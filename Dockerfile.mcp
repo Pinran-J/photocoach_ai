@@ -1,0 +1,53 @@
+# ── PhotoCoach MCP Server ──────────────────────────────────────────────────────
+#
+# Lighter image than the main app — only the inference and retrieval stack.
+# No Gradio, no LangGraph, no BLIP.
+#
+# Exposes two MCP tools over Streamable HTTP on port 8000:
+#   score_aesthetic             → ResNet50 inference (weights baked in at build)
+#   retrieve_photography_tips   → Pinecone MMR retrieval
+#
+# API keys injected at runtime via docker-compose env_file or K8s secrets.
+# ──────────────────────────────────────────────────────────────────────────────
+
+FROM python:3.12-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libgl1 \
+        libglib2.0-0 \
+        wget \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Only install what the MCP server actually needs (much smaller than full requirements.txt)
+RUN pip install --no-cache-dir \
+    mcp \
+    torch==2.5.1 \
+    torchvision==0.20.1 \
+    pillow \
+    numpy \
+    requests \
+    pinecone==7.3.0 \
+    langchain==1.2.1 \
+    langchain-openai==1.1.6 \
+    langchain-pinecone==0.2.13 \
+    python-dotenv
+
+# Copy only the modules the MCP server imports
+COPY models/       models/
+COPY tools/        tools/
+COPY rag/          rag/
+COPY mcp_server.py .
+
+# Download ResNet50 weights during build (same as main app image)
+RUN wget -q --show-progress \
+        -O /app/models/best_aesthetic_model_gpt_torch.pth \
+        https://huggingface.co/icecram/aesthetic_ranker/resolve/main/best_aesthetic_model_gpt_torch.pth
+
+ENV TRANSFORMERS_CACHE=/app/models/hf_cache
+ENV HF_HOME=/app/models/hf_cache
+
+EXPOSE 8000
+
+CMD ["python", "mcp_server.py"]

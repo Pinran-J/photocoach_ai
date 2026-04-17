@@ -50,8 +50,7 @@ class chat_interface:
             "messages": history,
         }
 
-        print(initial_state)
-        result = self.graph.invoke(initial_state) 
+        result = self.graph.invoke(initial_state)
         return result["messages"][-1].content
     
     
@@ -63,15 +62,12 @@ class chat_interface:
                 "image_path": image_path,
                 "messages": history,
             }
-            print(initial_state)
             emitted_tools = set()
             emitted_tool_plan = False
             results = []
+            final_msg_started = False
             async for stream_mode, chunk in self.graph.astream(initial_state, 
                                                                stream_mode=["values", "messages"]):
-                print("test")
-                print("history:", history)
-                print("chunk:", chunk)
                 if stream_mode == "values":
                     final_state = chunk
                     if "tool_plan" in final_state:
@@ -108,9 +104,12 @@ class chat_interface:
                                 yield results
                 elif stream_mode == "messages":
                     msg, metadata = chunk
-                    print("output: ", msg, metadata)
                     if metadata['langgraph_node'] == "final" and msg.content:
-                        results.append(gr.ChatMessage(role="assistant", content=msg.content))
+                        if not final_msg_started:
+                            results.append(gr.ChatMessage(role="assistant", content=msg.content))
+                            final_msg_started = True
+                        else:
+                            results[-1] = gr.ChatMessage(role="assistant", content=results[-1].content + msg.content)
                         yield results
                 
 
