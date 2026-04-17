@@ -6,7 +6,7 @@ Call run_pipeline() directly or via the scheduler in schedule.py.
 
 import logging
 import time
-from rag.etl.extractors import extract_all, WEB_SOURCES, PDF_DIR
+from rag.etl.extractors import extract_all, WEB_SOURCES, RSS_SOURCES, PDF_DIR
 from rag.etl.transform import transform
 from rag.etl.load import load
 
@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 def run_pipeline(
     pdf_folder: str = PDF_DIR,
     web_urls: list[str] = WEB_SOURCES,
+    rss_feeds: list[str] = RSS_SOURCES,
 ) -> dict:
     """
     Full ETL run.  Safe to call multiple times — idempotent via content-hash IDs.
@@ -32,7 +33,12 @@ def run_pipeline(
 
     # --- Extract ---
     logger.info("Stage 1/3: Extract")
-    raw_docs = extract_all(pdf_folder=pdf_folder, web_urls=web_urls)
+    raw_docs = extract_all(
+        pdf_folder=pdf_folder,
+        web_urls=web_urls,
+        rss_feeds=rss_feeds,
+        rss_max_age_days=14,  # only ingest articles from the last 14 days
+    )
 
     # --- Transform ---
     logger.info("Stage 2/3: Transform")

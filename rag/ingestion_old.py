@@ -50,7 +50,7 @@ print("Total tokens:", total_tokens)
 pc = Pinecone(api_key=config["PINECONE_API_KEY"])
 
 # Create a dense index with integrated embedding
-index_name = "photocoach-ai-index"
+index_name = "photocoach-ai-index-old"
 
 if not pc.has_index(index_name):
     pc.create_index(

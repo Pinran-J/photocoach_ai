@@ -1,0 +1,14 @@
+# ETL Lambda dependencies only — do NOT use the full requirements.txt
+# (torch/gradio/opencv would exceed Lambda's 250MB zip limit)
+langchain
+langchain-community
+langchain-openai
+langchain-text-splitters
+pinecone
+openai
+tiktoken
+pypdf
+beautifulsoup4
+lxml
+requests
+python-dotenv
