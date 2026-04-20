@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 INDEX_NAME = "photocoach-ai-index"
 EMBEDDING_MODEL = "text-embedding-3-small"
 EMBEDDING_DIMS = 1536
-UPSERT_BATCH_SIZE = 100
+UPSERT_BATCH_SIZE = 50
 
 
 def _get_or_create_index(pc: Pinecone) -> str:
@@ -89,7 +89,7 @@ def load(chunks: list[Document], ids: list[str]) -> int:
                 "Api-Key": pinecone_api_key,
                 "Content-Type": "application/json",
             },
-            timeout=30,
+            timeout=60,
         )
         resp.raise_for_status()
 
