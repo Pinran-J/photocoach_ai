@@ -2,7 +2,7 @@ import os
 import numpy as np
 import torch
 import torch.nn.functional as F
-from langchain.tools import tool
+from langchain_core.tools import tool
 from torchvision import transforms
 from models.aesthetic_resnet import AestheticResNet50
 from PIL import Image

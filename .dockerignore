@@ -1,0 +1,26 @@
+# ── Credentials — never bake into images ──────────────────────────────────────
+.env
+
+# ── Model weights — downloaded during build via wget instead ──────────────────
+models/best_aesthetic_model_gpt_torch.pth
+
+# ── Lambda build artifacts ────────────────────────────────────────────────────
+lambda_package/
+etl_lambda.zip
+
+# ── Data — not needed inside containers ──────────────────────────────────────
+data/
+
+# ── Git ───────────────────────────────────────────────────────────────────────
+.git/
+.gitignore
+
+# ── Python bytecode ───────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+
+# ── Dev / notebook files ──────────────────────────────────────────────────────
+*.ipynb
+.gradio/
+eval/
