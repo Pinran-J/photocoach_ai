@@ -22,11 +22,11 @@ class chat_interface:
 
         # temperature=0 + with_structured_output uses the model's native function-calling
         # schema, so partial/trailing text from the model never reaches the JSON parser.
-        planner_base = init_chat_model("gpt-4o-mini", temperature=0)
+        planner_base = init_chat_model("gpt-5-nano", temperature=0)
         tool_decider_model = planner_base.with_structured_output(ToolCalls)
 
         # temperature=0.3 for natural, varied coaching language
-        response_model = init_chat_model("gpt-4o-mini", temperature=0.3)
+        response_model = init_chat_model("gpt-5-nano", temperature=0.3)
 
         self.graph = build_graph(tool_decider_model, response_model)
         self.image = None
