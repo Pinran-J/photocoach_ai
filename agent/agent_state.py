@@ -29,6 +29,7 @@ class AgentState(MessagesState):
     exif: Dict = {}
     aesthetic_score: float = 0.0
     aesthetic_dist: List[float] = []
+    gradcam_path: Optional[str] = None
 
     # RAG
     retrieved_docs: List[str] = []

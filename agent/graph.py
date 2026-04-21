@@ -8,7 +8,8 @@ def build_graph(planner_llm, final_llm):
 
     graph.add_node("planner", lambda s: planner_node(s, planner_llm))
     graph.add_node("tool_executor", tool_node)
-    graph.add_node("final", lambda s: final_answer_node(s, final_llm))
+    async def final_node(s): return await final_answer_node(s, final_llm)
+    graph.add_node("final", final_node)
 
     graph.add_edge(START, "planner")
 
