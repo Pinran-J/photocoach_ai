@@ -22,39 +22,20 @@ class chat_interface:
 
         # temperature=0 + with_structured_output uses the model's native function-calling
         # schema, so partial/trailing text from the model never reaches the JSON parser.
-        planner_base = init_chat_model("gpt-5-nano", temperature=0)
+        planner_base = init_chat_model("gpt-4o-mini", temperature=0)
         tool_decider_model = planner_base.with_structured_output(ToolCalls)
 
         # temperature=0.3 for natural, varied coaching language
-        response_model = init_chat_model("gpt-5-nano", temperature=0.3)
+        response_model = init_chat_model("gpt-4o-mini", temperature=0.3)
 
         self.graph = build_graph(tool_decider_model, response_model)
         self.image = None
 
-    # 🔹 NEW: image updater (NO LLM CALLS)
     def set_image(self, image_path):
-        """
-        Called when the user uploads an image.
-        Just updates shared UI state.
-        """
         if image_path is None:
             return None, "No image uploaded."
-
         return image_path, "✅ Image uploaded and ready"
 
-    # 🔹 Chat-only logic
-    def rag_chat(self, message, history, image_path):
-        initial_state = {
-            "user_query": message,
-            "image_path": image_path,
-            "messages": history,
-        }
-
-        result = self.graph.invoke(initial_state)
-        return result["messages"][-1].content
-    
-    
-    
     async def async_rag_chat(self, message, history, image_path):
         try:
             initial_state = {
@@ -66,10 +47,16 @@ class chat_interface:
             emitted_tool_plan = False
             results = []
             final_msg_started = False
-            async for stream_mode, chunk in self.graph.astream(initial_state, 
-                                                               stream_mode=["values", "messages"]):
+            # gr.update() = no-op: leaves the component unchanged until gradcam actually runs
+            gradcam_current = gr.update()
+            tab_update = gr.update()
+
+            async for stream_mode, chunk in self.graph.astream(
+                initial_state, stream_mode=["values", "messages"]
+            ):
                 if stream_mode == "values":
                     final_state = chunk
+
                     if "tool_plan" in final_state:
                         if any(final_state["tool_plan"].values()) and not emitted_tool_plan:
                             to_caption_image = "✓" if final_state["tool_plan"]["caption_image"] else "✗"
@@ -77,44 +64,78 @@ class chat_interface:
                             to_extract_exif = "✓" if final_state["tool_plan"]["extract_exif"] else "✗"
                             to_retrieve_photography_tips = "✓" if final_state["tool_plan"]["retrieve_photography_tips"] else "✗"
 
-                            display_msg = f"Plan: Caption image {to_caption_image}, " \
-                                          f"Aesthetic scoring {to_aesthetic_score}, " \
-                                          f"EXIF extraction {to_extract_exif}, " \
-                                          f"Retrieve photography tips {to_retrieve_photography_tips}."
-                            results.append(gr.ChatMessage(role="assistant", content=display_msg, metadata={"title": f"🛠️ Used tools"}))
+                            display_msg = (
+                                f"Plan: Caption image {to_caption_image}, "
+                                f"Aesthetic scoring {to_aesthetic_score}, "
+                                f"EXIF extraction {to_extract_exif}, "
+                                f"Retrieve photography tips {to_retrieve_photography_tips}."
+                            )
+                            results.append(gr.ChatMessage(
+                                role="assistant",
+                                content=display_msg,
+                                metadata={"title": "🛠️ Tool plan"}
+                            ))
                             emitted_tool_plan = True
-                            yield results
-                            
+                            yield results, gradcam_current, tab_update
+
                         elif any(final_state["tool_plan"].values()) and emitted_tool_plan:
-                            if "caption" in final_state and not "caption" in emitted_tools:
-                                results.append(gr.ChatMessage(role="assistant", content=final_state["caption"], metadata={"title": f"🛠️ Used tool Captioner"}))
+                            if "caption" in final_state and "caption" not in emitted_tools:
+                                results.append(gr.ChatMessage(
+                                    role="assistant",
+                                    content=final_state["caption"],
+                                    metadata={"title": "🛠️ Captioner"}
+                                ))
                                 emitted_tools.add("caption")
-                                yield results
-                            if "aesthetic_score" in final_state and not "aesthetic_score" in emitted_tools:
-                                results.append(gr.ChatMessage(role="assistant", content=f"{final_state['aesthetic_score']}", metadata={"title": f"🛠️ Used tool Aesthetic Scorer"} ))
+                                yield results, gradcam_current, tab_update
+
+                            if "aesthetic_score" in final_state and "aesthetic_score" not in emitted_tools:
+                                results.append(gr.ChatMessage(
+                                    role="assistant",
+                                    content=f"Score: {final_state['aesthetic_score']:.1f}/10",
+                                    metadata={"title": "🛠️ Aesthetic Scorer"}
+                                ))
                                 emitted_tools.add("aesthetic_score")
-                                yield results
-                            if "exif" in final_state and not "exif" in emitted_tools:
-                                results.append(gr.ChatMessage(role="assistant", content=f"{final_state['exif']}", metadata={"title": f"🛠️ Used tool EXIF Extractor"}))
+                                # Update heatmap and switch to Heatmap tab only when gradcam is ready
+                                if final_state.get("gradcam_path"):
+                                    gradcam_current = final_state["gradcam_path"]
+                                    tab_update = gr.update(selected="heatmap")
+                                yield results, gradcam_current, tab_update
+
+                            if "exif" in final_state and "exif" not in emitted_tools:
+                                results.append(gr.ChatMessage(
+                                    role="assistant",
+                                    content=f"{final_state['exif']}",
+                                    metadata={"title": "🛠️ EXIF Extractor"}
+                                ))
                                 emitted_tools.add("exif")
-                                yield results
-                            if "retrieved_docs" in final_state and not "retrieved_docs" in emitted_tools:
-                                results.append(gr.ChatMessage(role="assistant", content="\n\n".join(final_state["retrieved_docs"])[:300], metadata={"title": f"🛠️ Used tool Photography Tips Retriever"}))
+                                yield results, gradcam_current, tab_update
+
+                            if "retrieved_docs" in final_state and "retrieved_docs" not in emitted_tools:
+                                results.append(gr.ChatMessage(
+                                    role="assistant",
+                                    content="\n\n".join(final_state["retrieved_docs"])[:600],
+                                    metadata={"title": "🛠️ Photography Tips Retriever"}
+                                ))
                                 emitted_tools.add("retrieved_docs")
-                                yield results
+                                yield results, gradcam_current, tab_update
+
                 elif stream_mode == "messages":
                     msg, metadata = chunk
-                    if metadata['langgraph_node'] == "final" and msg.content:
+                    if metadata["langgraph_node"] == "final" and msg.content:
                         if not final_msg_started:
                             results.append(gr.ChatMessage(role="assistant", content=msg.content))
                             final_msg_started = True
                         else:
-                            results[-1] = gr.ChatMessage(role="assistant", content=results[-1].content + msg.content)
-                        yield results
-                
+                            results[-1] = gr.ChatMessage(
+                                role="assistant",
+                                content=results[-1].content + msg.content
+                            )
+                        yield results, gradcam_current, tab_update
 
         except Exception as e:
-            user_error_message = "There was an error processing your request. Please try again."
             print(e)
-            yield [gr.ChatMessage(role="assistant", content=user_error_message + str(e))]
-            
+            yield (
+                [gr.ChatMessage(role="assistant", content="There was an error processing your request. Please try again.")],
+                gr.update(),
+                gr.update(),
+            )

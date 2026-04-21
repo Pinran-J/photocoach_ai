@@ -1,11 +1,14 @@
 import os
+import tempfile
 import numpy as np
 import torch
 import torch.nn.functional as F
 from langchain_core.tools import tool
 from torchvision import transforms
+from pytorch_grad_cam import GradCAM
+from pytorch_grad_cam.utils.image import show_cam_on_image
 from models.aesthetic_resnet import AestheticResNet50
-from PIL import Image
+from PIL import Image, ImageOps
 
 MODEL_URL = "https://huggingface.co/icecram/aesthetic_ranker/resolve/main/best_aesthetic_model_gpt_torch.pth"
 MODEL_PATH = "./models/best_aesthetic_model_gpt_torch.pth"
@@ -27,6 +30,13 @@ eval_transform = transforms.Compose([
                          std=[0.229, 0.224, 0.225]),
 ])
 
+# No normalisation — used for the Grad-CAM RGB overlay
+gradcam_transform = transforms.Compose([
+    transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
+    transforms.CenterCrop(IMAGE_SIZE),
+    transforms.ToTensor(),
+])
+
 def load_model():
     model = AestheticResNet50(pretrained=False)
     ckpt = torch.load(MODEL_PATH, map_location=DEVICE, weights_only=True)
@@ -39,6 +49,28 @@ def load_model():
     return model
 
 MODEL = load_model()
+
+def generate_gradcam(image_path: str) -> str:
+    """Generate a Grad-CAM heatmap overlay on the image using the aesthetic model.
+
+    Returns the file path of a JPEG with the heatmap blended onto the original image.
+    Uses pytorch-grad-cam library with layer4[-1] as the target layer.
+    """
+    pil_img = ImageOps.exif_transpose(Image.open(image_path).convert("RGB"))
+    input_tensor = gradcam_transform(pil_img).unsqueeze(0).to(DEVICE)
+    rgb_img = np.float32(pil_img.resize((IMAGE_SIZE, IMAGE_SIZE))) / 255.0
+
+    target_layers = [MODEL.backbone.layer4[-1]]
+    cam = GradCAM(model=MODEL, target_layers=target_layers)
+    grayscale_cam = cam(input_tensor=input_tensor)[0, :]
+    visualization = show_cam_on_image(rgb_img, grayscale_cam, use_rgb=True)
+
+    # Resize overlay back to the original image dimensions so aspect ratio matches
+    overlay = Image.fromarray(visualization).resize(pil_img.size, Image.LANCZOS)
+    tmp = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
+    overlay.save(tmp.name)
+    return tmp.name
+
 
 @tool
 def score_aesthetic(image_path: str) -> tuple[list, float]:
