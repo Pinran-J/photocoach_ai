@@ -10,7 +10,7 @@ import asyncio
 from mcp.client.session import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
 
-SERVER_URL = "http://15.134.224.148:8000/mcp"  # deployed on AWS ECS; use http://localhost:8000/mcp for local testing
+SERVER_URL = "http://16.176.199.85:8000/mcp"  # deployed on AWS ECS; use http://localhost:8000/mcp for local testing
 
 
 async def main():
