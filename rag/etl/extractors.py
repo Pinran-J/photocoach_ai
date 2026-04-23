@@ -18,45 +18,50 @@ from bs4 import BeautifulSoup
 logger = logging.getLogger(__name__)
 
 # ── Reference pages (stable, scraped for foundational knowledge) ──────────────
+# Coaching-style sources preferred over encyclopaedic (Wikipedia) content.
+# Cambridge in Colour and Photography Life write "here's how to do it"
+# rather than "here is the definition of" — much better RAG relevance.
 WEB_SOURCES: list[str] = [
-    # Foundational exposure / technical
-    "https://en.wikipedia.org/wiki/Exposure_(photography)",
-    "https://en.wikipedia.org/wiki/Aperture",
-    "https://en.wikipedia.org/wiki/Shutter_speed",
-    "https://en.wikipedia.org/wiki/Film_speed",
-    "https://en.wikipedia.org/wiki/Depth_of_field",
-    "https://en.wikipedia.org/wiki/White_balance",
-    "https://en.wikipedia.org/wiki/Bokeh",
-    "https://en.wikipedia.org/wiki/Camera_lens",
-    "https://en.wikipedia.org/wiki/Exposure_triangle",
-    "https://en.wikipedia.org/wiki/Histogram_(photography)",
-    "https://en.wikipedia.org/wiki/Color_temperature",
-    "https://en.wikipedia.org/wiki/Focal_length",
-    "https://en.wikipedia.org/wiki/Long-exposure_photography",
-    "https://en.wikipedia.org/wiki/High-dynamic-range_imaging",
-    "https://en.wikipedia.org/wiki/Flash_(photography)",
-    # Composition
-    "https://en.wikipedia.org/wiki/Rule_of_thirds",
-    "https://en.wikipedia.org/wiki/Composition_(visual_arts)",
-    "https://en.wikipedia.org/wiki/Golden_ratio",
-    "https://en.wikipedia.org/wiki/Leading_line",
-    "https://en.wikipedia.org/wiki/Negative_space",
-    "https://en.wikipedia.org/wiki/Symmetry",
-    # Genres
-    "https://en.wikipedia.org/wiki/Street_photography",
-    "https://en.wikipedia.org/wiki/Portrait_photography",
-    "https://en.wikipedia.org/wiki/Landscape_photography",
-    "https://en.wikipedia.org/wiki/Macro_photography",
-    "https://en.wikipedia.org/wiki/Night_photography",
-    "https://en.wikipedia.org/wiki/Wildlife_photography",
-    "https://en.wikipedia.org/wiki/Sports_photography",
-    "https://en.wikipedia.org/wiki/Documentary_photography",
-    # Lighting
-    "https://en.wikipedia.org/wiki/Rembrandt_lighting",
-    "https://en.wikipedia.org/wiki/Fill_light",
-    "https://en.wikipedia.org/wiki/Natural_lighting",
-    "https://en.wikipedia.org/wiki/Backlighting_(photography)",
-    "https://en.wikipedia.org/wiki/Catchlight",
+    # Cambridge in Colour — best free coaching tutorials, technique-first writing
+    "https://www.cambridgeincolour.com/tutorials/camera-exposure.htm",
+    "https://www.cambridgeincolour.com/tutorials/aperture.htm",
+    "https://www.cambridgeincolour.com/tutorials/shutter-speed.htm",
+    "https://www.cambridgeincolour.com/tutorials/ISO-sensitivity.htm",
+    "https://www.cambridgeincolour.com/tutorials/depth-of-field.htm",
+    "https://www.cambridgeincolour.com/tutorials/white-balance.htm",
+    "https://www.cambridgeincolour.com/tutorials/composition1.htm",
+    "https://www.cambridgeincolour.com/tutorials/composition2.htm",
+    "https://www.cambridgeincolour.com/tutorials/night-photography.htm",
+    "https://www.cambridgeincolour.com/tutorials/landscape-photography.htm",
+    "https://www.cambridgeincolour.com/tutorials/portrait-photography.htm",
+    "https://www.cambridgeincolour.com/tutorials/macro-photography.htm",
+    "https://www.cambridgeincolour.com/tutorials/flash-photography.htm",
+    "https://www.cambridgeincolour.com/tutorials/photographic-lighting.htm",
+    "https://www.cambridgeincolour.com/tutorials/histogram.htm",
+    "https://www.cambridgeincolour.com/tutorials/camera-metering.htm",
+    "https://www.cambridgeincolour.com/tutorials/polarizer.htm",
+    "https://www.cambridgeincolour.com/tutorials/lens-distortion.htm",
+    # Photography Life — practical technique guides, not just RSS articles
+    "https://photographylife.com/what-is-aperture-in-photography",
+    "https://photographylife.com/understanding-shutter-speed",
+    "https://photographylife.com/what-is-iso-in-photography",
+    "https://photographylife.com/what-is-exposure-in-photography",
+    "https://photographylife.com/composition-in-photography",
+    "https://photographylife.com/portrait-photography-tips",
+    "https://photographylife.com/landscape-photography-tips",
+    "https://photographylife.com/what-is-white-balance",
+    "https://photographylife.com/bokeh-in-photography",
+    "https://photographylife.com/what-is-depth-of-field",
+    "https://photographylife.com/how-to-photograph-the-milky-way",
+    "https://photographylife.com/how-to-photograph-stars",
+    "https://photographylife.com/street-photography-tips",
+    "https://photographylife.com/macro-photography-tips",
+    "https://photographylife.com/wildlife-photography-tips",
+    "https://photographylife.com/sports-photography-tips",
+    "https://photographylife.com/what-is-exposure-triangle",
+    "https://photographylife.com/understanding-histogram-in-photography",
+    "https://photographylife.com/understanding-camera-metering-modes",
+    "https://photographylife.com/photography-lighting-tips",
 ]
 
 # ── RSS feeds (dynamic — new articles ingested each weekly run) ───────────────

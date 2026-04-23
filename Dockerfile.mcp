@@ -32,7 +32,9 @@ RUN pip install --no-cache-dir \
     langchain==1.2.1 \
     langchain-openai==1.1.6 \
     langchain-pinecone==0.2.13 \
-    python-dotenv
+    python-dotenv \
+    sentence-transformers==5.4.1 \
+    grad-cam==1.5.5
 
 # Copy only the modules the MCP server imports
 COPY models/       models/
@@ -47,6 +49,9 @@ RUN wget -q --show-progress \
 
 ENV TRANSFORMERS_CACHE=/app/models/hf_cache
 ENV HF_HOME=/app/models/hf_cache
+
+# Pre-download CrossEncoder model so it's baked into the image (no cold-start download)
+RUN python -c "from sentence_transformers import CrossEncoder; CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')"
 
 EXPOSE 8000
 

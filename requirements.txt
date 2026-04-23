@@ -160,3 +160,4 @@ wrapt==2.0.1
 xxhash==3.6.0
 yarl==1.22.0
 zstandard==0.25.0
+sentence-transformers==5.4.1

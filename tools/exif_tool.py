@@ -1,5 +1,5 @@
 import exifread
-from langchain.tools import tool
+from langchain_core.tools import tool
 
 @tool
 def fetch_exif(image_path: str) -> dict:

@@ -65,8 +65,8 @@ from mcp.server.fastmcp import FastMCP
 # so we don't duplicate weight-loading logic.
 from tools.models_utils import MODEL, eval_transform
 
-# Reuse the already-initialised Pinecone retriever.
-from rag.retriever_fetch_tool import retriever
+# Reuse the already-initialised Pinecone retriever and CrossEncoder reranker.
+from rag.retriever_fetch_tool import retriever, reranker
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -138,7 +138,10 @@ def retrieve_photography_tips(query: str) -> str:
     """
     logger.info("retrieve_photography_tips called: %s", query)
     docs = retriever.invoke(query)
-    return "\n\n---\n\n".join(doc.page_content for doc in docs)
+    pairs = [(query, doc.page_content) for doc in docs]
+    scores = reranker.predict(pairs)
+    ranked = sorted(zip(scores, docs), key=lambda x: x[0], reverse=True)
+    return "\n\n---\n\n".join(doc.page_content for _, doc in ranked[:5])
 
 
 if __name__ == "__main__":

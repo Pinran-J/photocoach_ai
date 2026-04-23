@@ -11,10 +11,10 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 logger = logging.getLogger(__name__)
 
-# Smaller chunks than the old pipeline (600 vs 1000 tokens) so retrieval
-# surfaces more precise, self-contained tips rather than long passages.
-CHUNK_SIZE = 600
-CHUNK_OVERLAP = 100
+# 300-token chunks keep each chunk topically focused (one technique tip per chunk).
+# Smaller than the previous 600-token chunks — better precision for coaching Q&A retrieval.
+CHUNK_SIZE = 300
+CHUNK_OVERLAP = 75
 
 
 def _clean_text(text: str) -> str:

@@ -3,7 +3,7 @@ from tools.models_utils import score_aesthetic
 from tools.exif_tool import fetch_exif
 from tools.captioning_tool import caption_image
 from rag.retriever_fetch_tool import retrieve_photography_tips
-from agent.agent_state import ToolCalls
+from agent.agent_state import ToolCalls, ReflectDecision
 from langchain.chat_models import init_chat_model
 from agent.graph import build_graph
 
@@ -23,12 +23,13 @@ class chat_interface:
         # temperature=0 + with_structured_output uses the model's native function-calling
         # schema, so partial/trailing text from the model never reaches the JSON parser.
         planner_base = init_chat_model("gpt-5-nano", temperature=0)
-        tool_decider_model = planner_base.with_structured_output(ToolCalls)
+        tool_decider_model   = planner_base.with_structured_output(ToolCalls)
+        reflect_decider_model = planner_base.with_structured_output(ReflectDecision)
 
         # temperature=0.3 for natural, varied coaching language
         response_model = init_chat_model("gpt-5-nano", temperature=0.3)
 
-        self.graph = build_graph(tool_decider_model, response_model)
+        self.graph = build_graph(tool_decider_model, response_model, reflect_decider_model)
         self.image = None
 
     def set_image(self, image_path):
@@ -45,6 +46,8 @@ class chat_interface:
             }
             emitted_tools = set()
             emitted_tool_plan = False
+            emitted_iterations = set()   # tracks reflect rounds already shown
+            emitted_docs_count = 0       # how many retrieved_docs have already been displayed
             results = []
             final_msg_started = False
             # gr.update() = no-op: leaves the component unchanged until gradcam actually runs
@@ -57,6 +60,34 @@ class chat_interface:
                 if stream_mode == "values":
                     final_state = chunk
 
+                    # ── Reflect node output ──────────────────────────────────────
+                    iterations = final_state.get("iterations", 0)
+                    if iterations > 0 and iterations not in emitted_iterations:
+                        emitted_iterations.add(iterations)
+                        plan = final_state["tool_plan"]
+                        if any(plan.values()):
+                            # Build a readable summary of what reflect decided to fetch
+                            extra = []
+                            if plan.get("caption_image"):   extra.append("caption")
+                            if plan.get("aesthetic_score"): extra.append("aesthetic score")
+                            if plan.get("extract_exif"):    extra.append("EXIF")
+                            if plan.get("retrieve_photography_tips"):
+                                rq = final_state.get("retrieval_query", "")
+                                if rq:
+                                    extra.append(f're-search tips: "{rq}"')
+                                    # Allow the new retrieval result to be shown (count-based dedup handles duplicates)
+                                    emitted_tools.discard("retrieved_docs")
+                                else:
+                                    extra.append("photography tips")
+
+                            results.append(gr.ChatMessage(
+                                role="assistant",
+                                content=f"Missing information detected — fetching: {', '.join(extra)}.",
+                                metadata={"title": "🔄 Reflect"}
+                            ))
+                            yield results, gradcam_current, tab_update
+
+                    # ── Initial tool plan ────────────────────────────────────────
                     if "tool_plan" in final_state:
                         if any(final_state["tool_plan"].values()) and not emitted_tool_plan:
                             to_caption_image = "✓" if final_state["tool_plan"]["caption_image"] else "✗"
@@ -111,11 +142,15 @@ class chat_interface:
                                 yield results, gradcam_current, tab_update
 
                             if "retrieved_docs" in final_state and "retrieved_docs" not in emitted_tools:
-                                results.append(gr.ChatMessage(
-                                    role="assistant",
-                                    content="\n\n".join(final_state["retrieved_docs"])[:600],
-                                    metadata={"title": "🛠️ Photography Tips Retriever"}
-                                ))
+                                all_docs = final_state["retrieved_docs"]
+                                new_docs = all_docs[emitted_docs_count:]  # only show chunks added since last display
+                                if new_docs:
+                                    results.append(gr.ChatMessage(
+                                        role="assistant",
+                                        content="\n\n".join(new_docs)[:600],
+                                        metadata={"title": "🛠️ Photography Tips Retriever"}
+                                    ))
+                                    emitted_docs_count = len(all_docs)
                                 emitted_tools.add("retrieved_docs")
                                 yield results, gradcam_current, tab_update
 

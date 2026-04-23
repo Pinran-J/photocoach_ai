@@ -1,6 +1,6 @@
 from PIL import Image
 from transformers import BlipProcessor, BlipForConditionalGeneration
-from langchain.tools import tool
+from langchain_core.tools import tool
 
 processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base", use_fast=True)
 model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base", use_safetensors=True)

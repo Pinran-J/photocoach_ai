@@ -4,14 +4,22 @@ from typing_extensions import TypedDict
 
 class ToolCalls(TypedDict):
     """Bool indicating which tools to call."""
-    caption_image: bool # To call the caption_image tool
-    aesthetic_score: bool # To call the aesthetic_score tool 
-    extract_exif: bool # To call the extract_exif tool 
-    retrieve_photography_tips: bool # To call the retrieve_photography_tips tool
+    caption_image: bool
+    aesthetic_score: bool
+    extract_exif: bool
+    retrieve_photography_tips: bool
+
+class ReflectDecision(TypedDict):
+    """Reflect node output — missing tools + optional rephrased RAG query."""
+    caption_image: bool
+    aesthetic_score: bool
+    extract_exif: bool
+    retrieve_photography_tips: bool
+    rephrased_query: str  # non-empty → re-call RAG with this query; empty → use original
 
 class AgentState(MessagesState):
     """State for custom RAG agent with photography tools."""
-    
+
     # Inputs
     image_path: str = ""
     user_query: str = ""
@@ -23,7 +31,7 @@ class AgentState(MessagesState):
         extract_exif=False,
         retrieve_photography_tips=False
     )
-    
+
     # Tool outputs
     caption: str = ""
     exif: Dict = {}
@@ -33,8 +41,10 @@ class AgentState(MessagesState):
 
     # RAG
     retrieved_docs: List[str] = []
+    retrieval_query: str = ""   # overrides user_query for RAG when reflect rephrases
+
+    # Loop control
+    iterations: int = 0
 
     # Output
     final_response: str = ""
-    
-    
