@@ -91,7 +91,9 @@ The agent follows an explicit state graph with a self-reflection loop:
 3. **Reflect Node** — checks if gathered information is sufficient; re-triggers missing tools if needed
 4. **Final Node** — synthesises all tool outputs into coaching feedback, streamed token-by-token
 
-![Agentic workflow](flowchart.png)
+<p align="center">
+  <img src="flowchart.png" alt="Agentic workflow"/>
+</p>
 
 
 ## 🤖 Agent & Chatbot
