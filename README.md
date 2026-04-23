@@ -12,9 +12,9 @@ pinned: false
 
 ## Agentic Photography Coaching System (Tool-Orchestrated, Lightweight LLMs)
 
-### PhotoCoach AI is an agentic RAG-based chatbot that provides structured photography feedback by orchestrating multiple specialized tools, without relying on multimodal LLMs.
+### PhotoCoach AI is an agentic RAG-based chatbot that provides structured photography feedback by orchestrating multiple specialised tools — without relying on multimodal LLMs.
 
-The system demonstrates **agentic planning, state-driven execution, and real-time streaming explainability**, making intermediate decisions and tool usage visible to users.
+The system demonstrates **agentic planning, self-reflection, state-driven execution, and real-time streaming explainability**, making intermediate decisions and tool usage visible to users at every step.
 
 <!-- TABLE OF CONTENTS -->
 <details open>
@@ -28,9 +28,11 @@ The system demonstrates **agentic planning, state-driven execution, and real-tim
       </ul>
     </li>
     <li><a href="#-system-architecture">System Architecture</a></li>
-    <li><a href="#-rag-pipeline--knowledge-base">RAG Pipeline & Knowledge Base</a></li>
-    <li><a href="#-retrieval-evaluation">Retrieval Evaluation</a></li>
+    <li><a href="#-agent--chatbot">Agent & Chatbot</a></li>
+    <li><a href="#-rag-pipeline--etl">RAG Pipeline & ETL</a></li>
+    <li><a href="#-evaluation">Evaluation</a></li>
     <li><a href="#-mcp-server">MCP Server</a></li>
+    <li><a href="#-observability--mlops">Observability & MLOps</a></li>
     <li><a href="#-deployment">Deployment</a></li>
     <li><a href="#-project-structure">Project Structure</a></li>
     <li><a href="#-demo">Demo</a></li>
@@ -40,198 +42,259 @@ The system demonstrates **agentic planning, state-driven execution, and real-tim
 
 ## About The Project
 
-PhotoCoach AI is an **agent-based AI system** designed to analyze photographs and deliver actionable feedback on composition, aesthetics, and technical quality.
+PhotoCoach AI is an **agent-based AI system** designed to analyse photographs and deliver actionable feedback on composition, aesthetics, and technical quality.
 
-Instead of using large multimodal LLMs, the system relies on **lightweight language models combined with explicit tool execution**, allowing fine-grained control, transparency, and debuggability.
-
-The agent dynamically plans which tools to invoke based on the user query and image context, then synthesizes their outputs into a coherent response.
+Instead of using large multimodal LLMs, the system relies on **lightweight language models combined with explicit tool execution**, allowing fine-grained control, transparency, and debuggability. The agent dynamically plans which tools to invoke, reflects on whether the gathered information is sufficient, then synthesises a coherent coaching response.
 
 ---
 
 ### 🚀 Features
 
-- 🧠 **Agentic Tool Planning**
-  - Explicit planning step determines which tools to invoke per query
-  - Decisions are exposed in the UI for explainability
+- 🧠 **Agentic Planning + Self-Reflection**
+  - Explicit planner selects which tools to invoke per query (91.7% routing accuracy)
+  - Reflect node re-evaluates gathered information and re-triggers missing tools if needed
+  - All planning decisions streamed to the UI for full transparency
 
-- 📷 **Image Understanding via Tools**
-  - Image captioning (BLIP)
-  - Aesthetic scoring using a fine-tuned ResNet50 CNN
-  - EXIF metadata extraction for technical camera settings analysis
+- 📷 **Image Understanding via Specialised Tools**
+  - Image captioning (BLIP) — gives the LLM visual awareness without multimodal weights
+  - Aesthetic scoring with a fine-tuned ResNet50 CNN — 1–10 score with full probability distribution
+  - Grad-CAM heatmap overlay — visual explainability showing which image regions drove the score
+  - EXIF metadata extraction — surfaces actual camera settings (ISO, aperture, shutter speed)
 
 - 📚 **Retrieval-Augmented Generation (RAG)**
-  - MMR retrieval over a curated, continuously updated knowledge base
-  - Sources: photography books (PDFs), Wikipedia reference articles, 8 live RSS feeds
-  - ETL pipeline runs on AWS Lambda (EventBridge schedule) to ingest fresh articles weekly
+  - MMR retrieval over a curated, continuously updated knowledge base (3,500+ chunks)
+  - CrossEncoder reranking (`ms-marco-MiniLM-L-6-v2`) for precision-ordered results (+9.1% relevance)
+  - Sources: photography books, coaching tutorials, 8 live RSS feeds
+  - ETL pipeline on AWS Lambda (EventBridge) ingests fresh articles weekly
 
-- 🔄 **Real-Time Streaming Outputs**
-  - Intermediate tool usage and final responses streamed to the chat UI
+- 🔌 **MCP Server** — core tools exposed via Model Context Protocol, deployed on AWS ECS
 
-- 🧩 **State-Driven Workflow**
-  - Built with **LangGraph** for explicit state transitions and agent control
+- 📊 **Comprehensive Evaluation** — RAGAS (Faithfulness 0.917, Answer Relevance 0.834), planner routing accuracy 91.7%, reranker A/B eval
 
-- 🔌 **MCP Server**
-  - Core tools exposed as an MCP (Model Context Protocol) server
-  - Any MCP-compatible client can call `score_aesthetic` and `retrieve_photography_tips` directly
+- 🔍 **LangSmith Observability** — full production tracing of every agent node, LLM call, and reflect iteration
 
 ---
 
 ### Built With
 
-- **LangGraph** – agent orchestration & state management
-- **LangChain** – tool abstraction and retrieval
-- **Gradio** – streaming chat interface
-- **PyTorch** – ResNet50 aesthetic scoring model
-- **Pinecone** – vector database (MMR retrieval)
-- **OpenAI** – embeddings (`text-embedding-3-small`) and response generation (`gpt-5-nano`)
-- **transformers** – BLIP image captioning
-- **AWS Lambda + EventBridge** – scheduled ETL pipeline
-- **Docker + Kubernetes** – containerised deployment
+[![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)](https://langchain-ai.github.io/langgraph/)
+[![LangChain](https://img.shields.io/badge/LangChain-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)](https://langchain.com/)
+[![LangSmith](https://img.shields.io/badge/LangSmith-F5A623?style=for-the-badge&logo=langchain&logoColor=white)](https://smith.langchain.com/)
+[![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white)](https://openai.com/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org/)
+[![HuggingFace](https://img.shields.io/badge/HuggingFace-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black)](https://huggingface.co/)
+[![Gradio](https://img.shields.io/badge/Gradio-F97316?style=for-the-badge&logo=gradio&logoColor=white)](https://gradio.app/)
+[![Pinecone](https://img.shields.io/badge/Pinecone-000000?style=for-the-badge&logo=pinecone&logoColor=white)](https://pinecone.io/)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com/)
+[![AWS](https://img.shields.io/badge/AWS-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white)](https://aws.amazon.com/)
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)](https://kubernetes.io/)
+[![NumPy](https://img.shields.io/badge/NumPy-013243?style=for-the-badge&logo=numpy&logoColor=white)](https://numpy.org/)
+[![OpenCV](https://img.shields.io/badge/OpenCV-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)](https://opencv.org/)
 
 
 ## 🧠 System Architecture
 
-The system follows an explicit agent workflow:
+The agent follows an explicit state graph with a self-reflection loop:
 
-1. **Planner Node**
-   - Interprets user query and available context
-   - Selects which tools to invoke (if any)
+1. **Planner Node** — interprets the user query and selects which tools to invoke
+2. **Tool Executor** — runs selected tools in parallel via `asyncio.gather`
+3. **Reflect Node** — checks if gathered information is sufficient; re-triggers missing tools if needed
+4. **Final Node** — synthesises all tool outputs into coaching feedback, streamed token-by-token
 
-2. **Tool Nodes** (executed in parallel via `asyncio.gather`)
-   - Image captioning (BLIP)
-   - Aesthetic scoring (ResNet50)
-   - EXIF metadata extraction
-   - Photography knowledge retrieval (RAG)
-
-3. **Final Reasoning Node**
-   - Aggregates tool outputs into structured feedback
-   - Streams intermediate and final messages to the UI
-
-4. **Agentic flow graph**:
-
-![alt text](flowchart.png)
+![Agentic workflow](flowchart.png)
 
 
-## 📚 RAG Pipeline & Knowledge Base
+## 🤖 Agent & Chatbot
 
-The knowledge base is built from three source types and kept fresh by a scheduled ETL pipeline:
+The agent is built on **LangGraph** with a typed `AgentState`. The planner uses `gpt-5-nano` with structured output to decide which tools to call — rules are **semantic and intent-based**, not keyword-based.
 
-| Source | Content | Update frequency |
+| Query intent | Tools selected |
+|---|---|
+| "Score my photo" | caption + aesthetic |
+| "How can I improve this?" | caption + aesthetic + RAG |
+| "What camera settings were used?" | EXIF only |
+| "Is the exposure correct?" | caption + EXIF + RAG |
+| "Give me full feedback" | all four |
+| "Explain rule of thirds" (no image) | RAG only |
+
+The **reflect node** reviews gathered context after tool execution. It can request missing tools or re-trigger RAG with a rephrased query — but only if retrieved tips are on a completely wrong topic, never just because they are general. Hard-capped at 2 reflect iterations.
+
+The Gradio UI streams every intermediate step in real time: tool plan, per-tool outputs, reflect decisions, and the final answer token-by-token. Grad-CAM heatmaps appear in a dedicated tab when aesthetic scoring runs.
+
+
+## 📚 RAG Pipeline & ETL
+
+### Knowledge Base
+
+| Source | Content | Update |
 |---|---|---|
-| Photography books (PDF) | Expert composition, lighting, and technique | Static |
-| Wikipedia articles (20 pages) | Foundational concepts (exposure, aperture, depth of field, genres) | Static |
-| RSS feeds (6 publications) | New tutorials and guides from PetaPixel, Photography Life, Fstoppers, Shotkit, and others | Weekly (AWS Lambda) |
+| Photography books (PDF) | Expert composition, lighting, technique | Static |
+| Coaching tutorials (39 pages) | Cambridge in Colour + Photography Life | Static |
+| RSS feeds (8 publications) | PetaPixel, Fstoppers, DPReview, NatureTTL, and others | Weekly |
 
-**Retrieval:** MMR (Maximal Marginal Relevance) fetches 20 candidates and returns the 5 most relevant and diverse chunks, reducing redundancy from repeated sources.
+Sources were chosen for **coaching-style writing** over encyclopaedic content, directly improving retrieval quality for Q&A coaching.
 
-**ETL:** The Lambda function runs weekly via EventBridge, extracts new RSS articles, chunks and embeds them, and upserts into Pinecone via the REST API.
+### ETL
+
+```
+Extract → Transform → Load
+```
+
+- **Extract** — PDFs via `PyPDFLoader`, web tutorials via `WebBaseLoader`, RSS feeds parsed with full article body fetching via `BeautifulSoup` (last 14 days only)
+- **Transform** — text cleaning, chunking at **300 tokens / 75 overlap** (tiktoken), MD5-based deduplication for idempotent Pinecone upserts
+- **Load** — batch upsert to Pinecone via REST API; ~3,500 vectors with `text-embedding-3-small` embeddings
+
+Runs on **AWS Lambda** triggered weekly by EventBridge.
+
+### Retrieval
+
+```
+Query → MMR (k=5, fetch_k=20, λ=0.6) → CrossEncoder reranker → top-5 chunks
+```
+
+MMR balances relevance and diversity; the CrossEncoder reranker then precision-orders results. Evaluated at **+9.1% LLM relevance improvement** over MMR-only.
 
 
-## 📊 Retrieval Evaluation
+## 📊 Evaluation
 
-Label-free evaluation comparing the original index (PDF-only, similarity search) against the current index (PDF + Wikipedia + RSS, MMR retrieval) using an LLM-as-judge pattern across 20 photography test queries:
+### RAGAS — RAG Pipeline (`eval/eval_rag.py`)
 
-| Metric | Old Index | New Index | Change |
+10 photography coaching queries · judge: `gpt-4o-mini` · no labeled ground truth required
+
+| Metric | Score | Description |
+|---|---|---|
+| Faithfulness | **0.917** | Fraction of answer claims grounded in retrieved context |
+| Answer Relevance | **0.834** | How well the answer addresses the question |
+| Context Relevance | **0.545** | Topical relevance of retrieved chunks to the query |
+
+### Planner Routing Accuracy (`eval/eval_routing.py`)
+
+12 labeled test cases · model: `gpt-5-nano` (structured output)
+
+| Tool | Accuracy | Precision | Recall |
 |---|---|---|---|
-| LLM Relevance Score (1–5) | 3.0 | 3.0 | — |
-| Avg Cosine Similarity | 0.576 | 0.599 | +4.0% |
-| Diversity Score (0–1) | 0.305 | 0.427 | **+40.0%** |
+| caption_image | 100% | 1.00 | 1.00 |
+| aesthetic_score | 100% | 1.00 | 1.00 |
+| extract_exif | 100% | 1.00 | 1.00 |
+| retrieve_tips | 91.7% | 1.00 | 0.88 |
+| **Overall exact-match** | **91.7% (11/12)** | | |
 
-The +40% diversity improvement reflects MMR's ability to surface a wider range of relevant techniques per query rather than returning near-duplicate chunks from the same source.
+Zero false positives across all tools.
+
+### Reranker A/B (`eval/test_reranker.py`)
+
+8 queries · LLM-as-judge (`gpt-4o-mini`)
+
+| Pipeline | LLM Relevance (1–5) | Δ |
+|---|---|---|
+| MMR only | 3.025 | — |
+| MMR + CrossEncoder | **3.300** | **+9.1%** |
 
 
 ## 🔌 MCP Server
 
-PhotoCoach exposes its core tools as an [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server, allowing any compatible client to use them independently of the Gradio app.
+PhotoCoach exposes its core tools as a [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server over streamable-HTTP, deployed on **AWS ECS**.
 
-**Exposed tools:**
-- `score_aesthetic` – runs ResNet50 inference on a public image URL, returns a 1–10 score with distribution
-- `retrieve_photography_tips` – MMR retrieval over the Pinecone knowledge base
-
-**Run locally:**
-```bash
-docker compose up photocoach-mcp
-# Server available at http://localhost:8000/mcp
-python test_mcp_client.py
-```
+| Tool | Description |
+|---|---|
+| `score_aesthetic` | ResNet50 inference on a public image URL — returns score, distribution, interpretation |
+| `retrieve_photography_tips` | MMR + CrossEncoder retrieval — returns top-5 coaching passages |
 
 **Connect from Claude Desktop:**
 ```json
 {
   "mcpServers": {
     "photocoach": {
-      "url": "http://15.134.224.148:8000/mcp"
+      "url": "http://<your-ecs-ip>:8000/mcp"
     }
   }
 }
 ```
 
+**Test locally:**
+```bash
+python test_mcp_client.py
+```
+
+
+## 🔍 Observability & MLOps
+
+**LangSmith** traces every agent run in production — node latency, token cost, LLM inputs/outputs, and reflect iterations. No code changes required; LangGraph auto-instruments via env vars:
+
+```bash
+LANGSMITH_TRACING=true
+LANGSMITH_API_KEY=<your-key>
+LANGSMITH_PROJECT=photocoach-ai
+```
+
 
 ## 🚀 Deployment
 
-The app is fully containerised. Both services share a model weight volume to avoid downloading ResNet50 twice.
-
-**Run locally:**
+**Local:**
 ```bash
-cp .env.example .env   # add your OPENAI_API_KEY and PINECONE_API_KEY
+cp .env.example .env   # add OPENAI_API_KEY, PINECONE_API_KEY, LANGSMITH keys
 docker compose up --build
-# Gradio app → http://localhost:7860
-# MCP server → http://localhost:8000/mcp
+# Gradio app  → http://localhost:7860
+# MCP server  → http://localhost:8000/mcp
 ```
 
-**Kubernetes (AWS EKS):** K8s manifests are provided under `k8s/` with Deployments, Services, HPA (auto-scaling on CPU), and namespace/secret configuration.
+**HuggingFace Spaces:** Deployed via orphan branch (`hf-deploy`). Add API keys as Space secrets.
+
+**MCP server (AWS ECS):**
+```bash
+docker buildx build --platform linux/amd64 -f Dockerfile.mcp -t <ecr-uri>:latest --push .
+```
+
+**Kubernetes (AWS EKS):** Manifests under `k8s/` — Deployments, Services, HPA auto-scaling.
 
 
 ## 📁 Project Structure
 ```
 photocoach_ai/
 ├── agent/
-│   ├── agent_state.py           # Shared agent state (messages, tool plans, outputs)
-│   ├── graph.py                 # LangGraph agent workflow definition
-│   └── nodes.py                 # Planner, tool execution, and final reasoning nodes
+│   ├── agent_state.py           # Typed AgentState + ToolCalls schema
+│   ├── graph.py                 # LangGraph state graph definition
+│   └── nodes.py                 # Planner, tool executor, reflect, final nodes
 │
 ├── core/
-│   └── chat_interface.py        # Gradio-facing chat interface & streaming logic
+│   └── chat_interface.py        # Gradio streaming interface & state display logic
 │
 ├── rag/
 │   ├── etl/
-│   │   ├── extractors.py        # PDF, Wikipedia, and RSS extractors
-│   │   ├── pipeline.py          # Chunking, embedding, and Pinecone upsert
-│   │   └── load.py              # Pinecone REST upsert (Lambda-compatible)
-│   ├── ingestion_old.py         # Legacy ingestion script
-│   └── retriever_fetch_tool.py  # MMR retrieval tool
+│   │   ├── extractors.py        # PDF, web tutorial, and RSS extractors
+│   │   ├── transform.py         # Clean → chunk → deduplicate
+│   │   ├── pipeline.py          # Full ETL orchestration
+│   │   └── load.py              # Pinecone REST batch upsert (Lambda-compatible)
+│   └── retriever_fetch_tool.py  # MMR retriever + CrossEncoder reranker
 │
 ├── tools/
 │   ├── captioning_tool.py       # BLIP image captioning
 │   ├── exif_tool.py             # EXIF metadata extraction
-│   └── models_utils.py          # ResNet50 aesthetic scoring
+│   └── models_utils.py          # ResNet50 aesthetic scoring + Grad-CAM
 │
-├── models/
-│   └── aesthetic_resnet.py      # ResNet50 model definition
+├── eval/
+│   ├── eval_rag.py              # RAGAS evaluation
+│   ├── eval_routing.py          # Planner routing accuracy
+│   ├── test_reranker.py         # Reranker A/B evaluation
+│   ├── ragas_results.md         # RAGAS results
+│   └── routing_results.md       # Routing accuracy results
 │
 ├── k8s/                         # Kubernetes manifests (Deployment, HPA, Service)
-│
-├── mcp_server.py                # MCP server (streamable-HTTP transport)
-├── test_mcp_client.py           # MCP client for local testing
-├── lambda_handler.py            # AWS Lambda entry point for ETL
-├── requirements.txt             # Full app dependencies
-├── requirements-etl.txt         # Minimal Lambda dependencies
+├── mcp_server.py                # MCP server (streamable-HTTP + stdio)
+├── test_mcp_client.py           # MCP integration test client
+├── lambda_handler.py            # AWS Lambda ETL entry point
 ├── Dockerfile                   # Gradio app image
-├── Dockerfile.mcp               # MCP server image
+├── Dockerfile.mcp               # MCP server image (linux/amd64)
 ├── docker-compose.yml           # Local dev stack
-├── app.py                       # Application entry point
-└── README.md
+└── app.py                       # Application entry point
 ```
 
 
 ## 📸 Demo
 
-![alt text](demo.gif)
+![Demo](demo.gif)
 
-A short demo showing:
-- Agent planning decisions
-- Tool execution steps (captioning, aesthetic scoring, EXIF, RAG retrieval)
-- Final synthesised feedback streamed to the UI
+A short demo showing agent planning, tool execution, reflect loop, Grad-CAM heatmap, and streamed final feedback.
 
 ---
 
