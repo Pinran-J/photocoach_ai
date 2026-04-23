@@ -1,13 +1,3 @@
----
-title: PhotoCoach AI
-emoji: 📸
-colorFrom: blue
-colorTo: purple
-sdk: gradio
-app_file: app.py
-pinned: false
----
-
 # 📸 PhotoCoach AI
 
 ## Agentic Photography Coaching System (Tool-Orchestrated, Lightweight LLMs)
