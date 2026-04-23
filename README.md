@@ -6,6 +6,12 @@
 
 The system demonstrates **agentic planning, self-reflection, state-driven execution, and real-time streaming explainability**, making intermediate decisions and tool usage visible to users at every step.
 
+<p align="center">
+  <a href="https://huggingface.co/spaces/icecram/photocoach-ai">
+    <img src="https://img.shields.io/badge/🚀%20Live%20Demo-HuggingFace%20Spaces-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black" alt="Live Demo"/>
+  </a>
+</p>
+
 <!-- TABLE OF CONTENTS -->
 <details open>
   <summary>Table of Contents</summary>
@@ -77,7 +83,6 @@ Instead of using large multimodal LLMs, the system relies on **lightweight langu
 [![Pinecone](https://img.shields.io/badge/Pinecone-000000?style=for-the-badge&logo=pinecone&logoColor=white)](https://pinecone.io/)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com/)
 [![AWS](https://img.shields.io/badge/AWS-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white)](https://aws.amazon.com/)
-[![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)](https://kubernetes.io/)
 [![NumPy](https://img.shields.io/badge/NumPy-013243?style=for-the-badge&logo=numpy&logoColor=white)](https://numpy.org/)
 [![OpenCV](https://img.shields.io/badge/OpenCV-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)](https://opencv.org/)
 
@@ -219,6 +224,10 @@ LANGSMITH_API_KEY=<your-key>
 LANGSMITH_PROJECT=photocoach-ai
 ```
 
+<p align="center">
+  <img src="langsmith-trace.png" alt="LangSmith trace showing agent nodes, latency, and token usage" width="800"/>
+</p>
+
 
 ## 🚀 Deployment
 
@@ -230,14 +239,13 @@ docker compose up --build
 # MCP server  → http://localhost:8000/mcp
 ```
 
-**HuggingFace Spaces:** Deployed via orphan branch (`hf-deploy`). Add API keys as Space secrets.
+**HuggingFace Spaces:** Live demo at [huggingface.co/spaces/icecram/photocoach-ai](https://huggingface.co/spaces/icecram/photocoach-ai). Add API keys as Space secrets to run your own instance.
 
 **MCP server (AWS ECS):**
 ```bash
 docker buildx build --platform linux/amd64 -f Dockerfile.mcp -t <ecr-uri>:latest --push .
 ```
 
-**Kubernetes (AWS EKS):** Manifests under `k8s/` — Deployments, Services, HPA auto-scaling.
 
 
 ## 📁 Project Structure
@@ -271,7 +279,6 @@ photocoach_ai/
 │   ├── ragas_results.md         # RAGAS results
 │   └── routing_results.md       # Routing accuracy results
 │
-├── k8s/                         # Kubernetes manifests (Deployment, HPA, Service)
 ├── mcp_server.py                # MCP server (streamable-HTTP + stdio)
 ├── test_mcp_client.py           # MCP integration test client
 ├── lambda_handler.py            # AWS Lambda ETL entry point
